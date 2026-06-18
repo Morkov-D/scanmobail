@@ -1,0 +1,2037 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#155eef">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Сканер магазина</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --surface: #ffffff;
+      --surface-2: #eef2f7;
+      --text: #17191f;
+      --muted: #68707d;
+      --line: #d9dee7;
+      --accent: #155eef;
+      --accent-dark: #0f47bd;
+      --good: #087a4a;
+      --bad: #b42318;
+      --warn: #a15c00;
+      --shadow: 0 14px 38px rgba(22, 28, 45, 0.12);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    input {
+      width: 100%;
+      min-height: 52px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 13px 14px;
+      color: var(--text);
+      background: var(--surface);
+      font-size: 16px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(21, 94, 239, 0.14);
+    }
+
+    label {
+      display: block;
+      margin: 0 0 7px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .app {
+      width: min(100%, 680px);
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: calc(14px + env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: -14px -14px 12px;
+      padding: calc(14px + env(safe-area-inset-top)) 14px 12px;
+      background: rgba(246, 247, 244, 0.94);
+      border-bottom: 1px solid rgba(217, 222, 231, 0.86);
+      backdrop-filter: blur(14px);
+    }
+
+    .caption {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      margin-top: 2px;
+      font-size: 23px;
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      font-size: 20px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .screen {
+      display: grid;
+      gap: 12px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .panel {
+      padding: 14px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel.flat {
+      box-shadow: none;
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .row > * {
+      min-width: 0;
+    }
+
+    .grow {
+      flex: 1;
+    }
+
+    .button {
+      min-height: 50px;
+      padding: 0 15px;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .button:active {
+      transform: translateY(1px);
+    }
+
+    .button.secondary {
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+    }
+
+    .button.danger {
+      background: #ffe8e5;
+      color: var(--bad);
+      border: 1px solid #ffc9c2;
+    }
+
+    .button.good {
+      background: var(--good);
+    }
+
+    .icon-button {
+      width: 46px;
+      height: 42px;
+      flex: 0 0 auto;
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .status-line {
+      min-height: 20px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .status-line.error {
+      color: var(--bad);
+      font-weight: 700;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      padding: 5px;
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .mode-btn {
+      min-height: 44px;
+      border-radius: 7px;
+      color: var(--muted);
+      background: transparent;
+      font-weight: 900;
+    }
+
+    .mode-btn.active {
+      color: #fff;
+      background: var(--accent);
+      box-shadow: 0 8px 20px rgba(21, 94, 239, 0.22);
+    }
+
+    .employee-bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 11px 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .employee-name {
+      overflow: hidden;
+      font-size: 14px;
+      font-weight: 900;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 9px;
+      border-radius: 999px;
+      color: var(--good);
+      background: #e8f7ef;
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .badge.offline {
+      color: var(--warn);
+      background: #fff4df;
+    }
+
+    .badge.error {
+      color: var(--bad);
+      background: #ffe8e5;
+    }
+
+    .scanner {
+      position: relative;
+      overflow: hidden;
+      min-height: 310px;
+      border-radius: 8px;
+      background: #101319;
+      border: 1px solid #252c39;
+    }
+
+    .scanner video {
+      display: block;
+      width: 100%;
+      height: 100%;
+      min-height: 310px;
+      object-fit: cover;
+      background: #101319;
+    }
+
+    #reader {
+      width: 100%;
+      min-height: 310px;
+      background: #101319;
+    }
+
+    #reader video {
+      min-height: 310px;
+      object-fit: cover;
+    }
+
+    .scanner-placeholder {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      color: #dfe7f4;
+      text-align: center;
+      background: linear-gradient(145deg, #101319, #1c2430);
+    }
+
+    .scanner.active .scanner-placeholder {
+      display: none;
+    }
+
+    .scan-frame {
+      position: absolute;
+      z-index: 3;
+      inset: 18%;
+      display: none;
+      border: 2px solid rgba(255, 255, 255, 0.86);
+      border-radius: 8px;
+      pointer-events: none;
+    }
+
+    .scanner.active .scan-frame {
+      display: block;
+    }
+
+    .scan-frame::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 50%;
+      height: 2px;
+      background: #32d583;
+      box-shadow: 0 0 14px rgba(50, 213, 131, 0.75);
+    }
+
+    .camera-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .manual-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .last-product {
+      display: grid;
+      gap: 6px;
+      min-height: 54px;
+      padding: 11px 12px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+    }
+
+    .product-title {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .product-meta {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .suggestions {
+      display: grid;
+      gap: 7px;
+    }
+
+    .suggestion {
+      display: block;
+      width: 100%;
+      min-height: 50px;
+      padding: 9px 11px;
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+
+    .suggestion strong {
+      display: block;
+      margin-bottom: 3px;
+      overflow-wrap: anywhere;
+      font-size: 14px;
+    }
+
+    .cart-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .cart-count {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .cart-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .cart-empty {
+      padding: 18px 12px;
+      border: 1px dashed var(--line);
+      border-radius: 8px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .cart-item {
+      display: grid;
+      gap: 9px;
+      padding: 11px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .cart-item.warn {
+      border-color: #f6c36a;
+      background: #fff9ed;
+    }
+
+    .cart-main {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 10px;
+    }
+
+    .cart-title {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+
+    .mini-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      margin-top: 5px;
+      padding: 0 7px;
+      border-radius: 999px;
+      color: var(--warn);
+      background: #fff0d2;
+      font-size: 11px;
+      font-weight: 900;
+    }
+
+    .qty-controls {
+      display: grid;
+      grid-template-columns: 42px 82px 42px 42px;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .qty-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      color: var(--text);
+      background: var(--surface-2);
+      border: 1px solid var(--line);
+      font-size: 22px;
+      font-weight: 900;
+    }
+
+    .qty-btn.remove {
+      color: var(--bad);
+      background: #ffe8e5;
+      border-color: #ffc9c2;
+      font-size: 18px;
+    }
+
+    .qty-input {
+      min-height: 42px;
+      padding: 8px;
+      text-align: center;
+      font-weight: 900;
+    }
+
+    .bottom-actions {
+      position: sticky;
+      bottom: 0;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin: 0 -14px calc(-18px - env(safe-area-inset-bottom));
+      padding: 10px 14px calc(12px + env(safe-area-inset-bottom));
+      background: rgba(246, 247, 244, 0.94);
+      border-top: 1px solid rgba(217, 222, 231, 0.9);
+      backdrop-filter: blur(14px);
+    }
+
+    .toast {
+      position: fixed;
+      left: 14px;
+      right: 14px;
+      bottom: calc(18px + env(safe-area-inset-bottom));
+      z-index: 100;
+      max-width: 652px;
+      margin: 0 auto;
+      padding: 13px 14px;
+      border-radius: 8px;
+      color: #fff;
+      background: #202632;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.26);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .toast.error {
+      background: var(--bad);
+    }
+
+    @media (min-width: 560px) {
+      .app {
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+
+      .topbar,
+      .bottom-actions {
+        margin-left: -20px;
+        margin-right: -20px;
+        padding-left: 20px;
+        padding-right: 20px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .cart-main {
+        grid-template-columns: 1fr;
+      }
+
+      .qty-controls {
+        grid-template-columns: 42px minmax(72px, 1fr) 42px 42px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div>
+        <div class="caption">Телефонный модуль</div>
+        <h1 id="modeTitle">Оприходование</h1>
+      </div>
+      <button class="icon-button" id="settingsBtn" type="button" aria-label="Настройки API">API</button>
+    </header>
+
+    <main>
+      <section class="screen" id="setupScreen">
+        <div class="panel stack">
+          <h2>Подключение</h2>
+          <form class="stack" id="apiForm">
+            <div>
+              <label for="apiUrlInput">Google Apps Script API</label>
+              <input id="apiUrlInput" autocomplete="url" inputmode="url" placeholder="https://script.google.com/macros/s/.../exec">
+            </div>
+            <div class="row">
+              <button class="button grow" type="submit">Сохранить</button>
+              <button class="button secondary" id="resetApiBtn" type="button">Сброс</button>
+            </div>
+            <div class="status-line" id="apiStatus"></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="loginScreen">
+        <div class="panel stack">
+          <h2>Вход сотрудника</h2>
+          <form class="stack" id="loginForm">
+            <div>
+              <label for="employeeIdInput">ИД сотрудника</label>
+              <input id="employeeIdInput" autocomplete="off" inputmode="text" enterkeyhint="done">
+            </div>
+            <button class="button" type="submit">Войти</button>
+            <div class="status-line" id="loginStatus"></div>
+          </form>
+        </div>
+      </section>
+
+      <section class="screen hidden" id="workScreen">
+        <div class="employee-bar">
+          <div class="employee-name" id="employeeBadge">Сотрудник</div>
+          <span class="badge" id="networkBadge">Онлайн</span>
+        </div>
+
+        <div class="segmented" role="tablist" aria-label="Раздел">
+          <button class="mode-btn active" type="button" data-mode="receiving">Оприход</button>
+          <button class="mode-btn" type="button" data-mode="inventory">Инвентаризация</button>
+        </div>
+
+        <div class="scanner" id="scannerBox">
+          <div id="reader"></div>
+          <div class="scanner-placeholder" id="scannerPlaceholder">
+            <div>
+              <strong>Камера выключена</strong>
+              <div class="product-meta" id="cameraStatus">Нажмите кнопку камеры</div>
+            </div>
+          </div>
+          <div class="scan-frame" aria-hidden="true"></div>
+        </div>
+
+        <div class="camera-actions">
+          <button class="button" id="cameraBtn" type="button">Камера</button>
+          <button class="button secondary" id="stopCameraBtn" type="button">Стоп</button>
+          <button class="button secondary" id="torchBtn" type="button" disabled>Свет</button>
+        </div>
+
+        <form class="manual-form" id="manualForm">
+          <input id="manualInput" autocomplete="off" inputmode="search" enterkeyhint="done" placeholder="Код или ИД товара">
+          <button class="button secondary" type="submit">Добавить</button>
+        </form>
+
+        <div class="last-product" id="lastProduct">
+          <div class="product-title">Готов к сканированию</div>
+          <div class="product-meta">Очередь синхронизируется при появлении связи</div>
+        </div>
+
+        <div class="suggestions hidden" id="suggestions"></div>
+
+        <section class="panel flat stack">
+          <div class="cart-head">
+            <h2>Список</h2>
+            <span class="cart-count" id="cartCount">0 товаров</span>
+          </div>
+          <div class="cart-list" id="cartList"></div>
+        </section>
+
+        <div class="bottom-actions">
+          <button class="button good" id="sendBtn" type="button">Записать</button>
+          <button class="button secondary" id="flushBtn" type="button">Очередь</button>
+        </div>
+      </section>
+    </main>
+
+    <div class="toast hidden" id="toast"></div>
+  </div>
+
+  <script src="html5-qrcode.min.js"></script>
+  <script>
+    (function () {
+      'use strict';
+
+      const KEYS = {
+        api: 'store-phone-api-url-v1',
+        employee: 'store-phone-employee-id-v1',
+        employeeProfile: 'store-phone-employee-profile-v1',
+        cart: 'store-phone-cart-v1',
+        queue: 'store-phone-queue-v1',
+        mode: 'store-phone-mode-v1',
+      };
+
+      const MODES = {
+        receiving: {
+          title: 'Оприходование',
+          action: 'postReceiving',
+          sent: 'Оприходование записано',
+        },
+        inventory: {
+          title: 'Инвентаризация',
+          action: 'postInventory',
+          sent: 'Инвентаризация записана',
+        },
+      };
+
+      const DB_NAME = 'store-phone-products';
+      const DB_VERSION = 1;
+      const PRODUCT_STORE = 'products';
+      const META_STORE = 'meta';
+      const PRODUCT_BATCH_SIZE = 750;
+      const CHUNK_SIZE = 20;
+      const SCAN_COOLDOWN_MS = 1300;
+      const API_TIMEOUT_MS = 24000;
+
+      const state = {
+        apiUrl: '',
+        employee: null,
+        cachedEmployee: null,
+        mode: 'receiving',
+        cart: { receiving: {}, inventory: {} },
+        queue: [],
+        productDb: null,
+        productCount: 0,
+        syncingProducts: false,
+        syncLoaded: 0,
+        syncTotal: 0,
+        productSyncToken: 'single',
+        scanning: false,
+        html5QrCode: null,
+        cameraStopping: false,
+        lastScan: { code: '', at: 0 },
+        audioCtx: null,
+        torchOn: false,
+        flushing: false,
+        sending: false,
+      };
+
+      const els = {};
+      let jsonpSeq = 0;
+      let toastTimer = 0;
+
+      document.addEventListener('DOMContentLoaded', init);
+
+      function init() {
+        collectElements();
+        loadState();
+        applyApiFromUrl();
+        bindEvents();
+        registerServiceWorker();
+        renderAll();
+        initializeProductDb();
+
+        if (isEmbedded()) {
+          showToast('Откройте ссылку GitHub Pages напрямую. В iframe камера будет заблокирована.', true);
+        }
+
+        if (state.apiUrl) {
+          showLoginScreen();
+        } else {
+          showSetupScreen();
+        }
+
+        const employeeId = localStorage.getItem(KEYS.employee);
+        if (state.apiUrl && employeeId) {
+          els.employeeIdInput.value = employeeId;
+          login(employeeId, true);
+        } else {
+          focusSoon(state.apiUrl ? els.employeeIdInput : els.apiUrlInput);
+        }
+      }
+
+      function collectElements() {
+        [
+          'modeTitle',
+          'settingsBtn',
+          'setupScreen',
+          'apiForm',
+          'apiUrlInput',
+          'resetApiBtn',
+          'apiStatus',
+          'loginScreen',
+          'loginForm',
+          'employeeIdInput',
+          'loginStatus',
+          'workScreen',
+          'employeeBadge',
+          'networkBadge',
+          'scannerBox',
+          'reader',
+          'scannerPlaceholder',
+          'cameraStatus',
+          'cameraBtn',
+          'stopCameraBtn',
+          'torchBtn',
+          'manualForm',
+          'manualInput',
+          'lastProduct',
+          'suggestions',
+          'cartCount',
+          'cartList',
+          'sendBtn',
+          'flushBtn',
+          'toast',
+        ].forEach(function (id) {
+          els[id] = document.getElementById(id);
+        });
+      }
+
+      function bindEvents() {
+        els.settingsBtn.addEventListener('click', showSetupScreen);
+        els.apiForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          saveApiUrl();
+        });
+        els.resetApiBtn.addEventListener('click', function () {
+          localStorage.removeItem(KEYS.api);
+          state.apiUrl = '';
+          els.apiUrlInput.value = '';
+          setStatus(els.apiStatus, 'Адрес API сброшен.');
+        });
+        els.loginForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          login(els.employeeIdInput.value.trim(), false);
+        });
+        document.querySelectorAll('.mode-btn').forEach(function (button) {
+          button.addEventListener('click', function () {
+            setMode(button.dataset.mode);
+          });
+        });
+        els.cameraBtn.addEventListener('click', startCamera);
+        els.stopCameraBtn.addEventListener('click', stopCamera);
+        els.torchBtn.addEventListener('click', toggleTorch);
+        els.manualForm.addEventListener('submit', function (event) {
+          event.preventDefault();
+          const value = els.manualInput.value.trim();
+          if (!value) return;
+          els.manualInput.value = '';
+          handleCode(value, true);
+        });
+        els.cartList.addEventListener('click', handleCartClick);
+        els.cartList.addEventListener('change', handleCartChange);
+        els.sendBtn.addEventListener('click', sendCurrentCart);
+        els.flushBtn.addEventListener('click', flushQueue);
+        window.addEventListener('online', function () {
+          renderNetwork();
+          flushQueue();
+          if (state.employee) syncProducts();
+        });
+        window.addEventListener('offline', renderNetwork);
+        document.addEventListener('visibilitychange', function () {
+          if (document.hidden) stopCamera();
+        });
+      }
+
+      function loadState() {
+        state.apiUrl = localStorage.getItem(KEYS.api) || '';
+        state.mode = MODES[localStorage.getItem(KEYS.mode)] ? localStorage.getItem(KEYS.mode) : 'receiving';
+        state.cart = readJson(KEYS.cart, { receiving: {}, inventory: {} });
+        if (!state.cart.receiving) state.cart.receiving = {};
+        if (!state.cart.inventory) state.cart.inventory = {};
+        state.queue = readJson(KEYS.queue, []);
+        state.cachedEmployee = readJson(KEYS.employeeProfile, null);
+        els.apiUrlInput.value = state.apiUrl;
+      }
+
+      function applyApiFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        const api = params.get('api');
+        if (!api) return;
+        state.apiUrl = api.trim();
+        localStorage.setItem(KEYS.api, state.apiUrl);
+        els.apiUrlInput.value = state.apiUrl;
+      }
+
+      function saveApiUrl() {
+        const value = els.apiUrlInput.value.trim();
+        try {
+          const url = new URL(value);
+          if (url.protocol !== 'https:') {
+            throw new Error('Нужен HTTPS-адрес Apps Script.');
+          }
+        } catch (error) {
+          setStatus(els.apiStatus, error.message || 'Некорректный адрес API.', true);
+          return;
+        }
+        state.apiUrl = value;
+        localStorage.setItem(KEYS.api, value);
+        setStatus(els.apiStatus, 'API сохранен.');
+        showLoginScreen();
+        focusSoon(els.employeeIdInput);
+      }
+
+      function showSetupScreen() {
+        els.setupScreen.classList.remove('hidden');
+        els.loginScreen.classList.add('hidden');
+        els.workScreen.classList.add('hidden');
+        stopCamera();
+        focusSoon(els.apiUrlInput);
+      }
+
+      function showLoginScreen() {
+        els.setupScreen.classList.add('hidden');
+        els.loginScreen.classList.remove('hidden');
+        els.workScreen.classList.add('hidden');
+        stopCamera();
+        focusSoon(els.employeeIdInput);
+      }
+
+      function showWorkScreen() {
+        els.setupScreen.classList.add('hidden');
+        els.loginScreen.classList.add('hidden');
+        els.workScreen.classList.remove('hidden');
+        focusSoon(els.manualInput);
+      }
+
+      function login(employeeId, silent) {
+        if (!employeeId) {
+          setStatus(els.loginStatus, 'Введите ИД сотрудника.', true);
+          return;
+        }
+        if (!navigator.onLine && hasCachedEmployee(employeeId)) {
+          completeLogin(state.cachedEmployee, silent, true);
+          return;
+        }
+        setStatus(els.loginStatus, 'Проверяю сотрудника...');
+        apiCall('login', { employeeId: employeeId }, API_TIMEOUT_MS)
+          .then(function (data) {
+            state.cachedEmployee = data.employee;
+            writeJson(KEYS.employeeProfile, data.employee);
+            completeLogin(data.employee, silent, false);
+          })
+          .catch(function (error) {
+            if (isNetworkError(error) && hasCachedEmployee(employeeId)) {
+              completeLogin(state.cachedEmployee, silent, true);
+              return;
+            }
+            setStatus(els.loginStatus, error.message, true);
+          });
+      }
+
+      function hasCachedEmployee(employeeId) {
+        return Boolean(
+          state.cachedEmployee &&
+          normalizeKey(state.cachedEmployee.employeeId) === normalizeKey(employeeId)
+        );
+      }
+
+      function completeLogin(employee, silent, offline) {
+        state.employee = employee;
+        localStorage.setItem(KEYS.employee, employee.employeeId);
+        setStatus(els.loginStatus, '');
+        renderEmployee();
+        showWorkScreen();
+        flushQueue();
+        syncProducts();
+        if (!silent) showToast(offline ? 'Офлайн-вход. Данные будут отправлены позже.' : 'Вход выполнен.');
+      }
+
+      function setMode(mode) {
+        if (!MODES[mode]) return;
+        state.mode = mode;
+        localStorage.setItem(KEYS.mode, mode);
+        renderMode();
+        renderCart();
+      }
+
+      function renderAll() {
+        renderMode();
+        renderEmployee();
+        renderNetwork();
+        renderCart();
+      }
+
+      function renderMode() {
+        els.modeTitle.textContent = MODES[state.mode].title;
+        document.querySelectorAll('.mode-btn').forEach(function (button) {
+          button.classList.toggle('active', button.dataset.mode === state.mode);
+        });
+      }
+
+      function renderEmployee() {
+        if (!state.employee) {
+          els.employeeBadge.textContent = 'Сотрудник';
+          return;
+        }
+        els.employeeBadge.textContent = state.employee.employeeId + ' · ' + state.employee.fio;
+      }
+
+      function renderNetwork() {
+        const queued = state.queue.length;
+        if (state.syncingProducts) {
+          const total = state.syncTotal || '?';
+          els.networkBadge.textContent = 'КТ ' + state.syncLoaded + '/' + total;
+          els.networkBadge.className = 'badge offline';
+        } else if (!navigator.onLine) {
+          els.networkBadge.textContent = queued ? 'Нет сети · ' + queued : 'Нет сети';
+          els.networkBadge.className = 'badge offline';
+        } else if (queued) {
+          els.networkBadge.textContent = 'Очередь · ' + queued;
+          els.networkBadge.className = 'badge offline';
+        } else {
+          els.networkBadge.textContent = 'Онлайн';
+          els.networkBadge.className = 'badge';
+        }
+      }
+
+      function currentCart() {
+        if (!state.cart[state.mode]) state.cart[state.mode] = {};
+        return state.cart[state.mode];
+      }
+
+      function renderCart() {
+        const items = Object.values(currentCart());
+        const totalQty = items.reduce(function (sum, item) {
+          return sum + Number(item.quantity || 0);
+        }, 0);
+        els.cartCount.textContent = items.length + ' поз. · ' + formatQty(totalQty) + ' шт.';
+
+        if (!items.length) {
+          els.cartList.innerHTML = '<div class="cart-empty">Список пуст</div>';
+          return;
+        }
+
+        els.cartList.innerHTML = items.map(function (item) {
+          const key = encodeURIComponent(item.productId);
+          const meta = [
+            item.productId ? 'ИД ' + item.productId : '',
+            item.size ? 'Размер ' + item.size : '',
+            Number(item.discountPrice || item.price) ? 'Цена ' + formatMoney(item.discountPrice || item.price) : '',
+          ].filter(Boolean).join(' · ');
+          return [
+            '<article class="cart-item' + (item.unresolved ? ' warn' : '') + '">',
+              '<div class="cart-main">',
+                '<div>',
+                  '<div class="cart-title">' + escapeHtml(item.name || item.productId) + '</div>',
+                  '<div class="product-meta">' + escapeHtml(meta) + '</div>',
+                  item.unresolved ? '<span class="mini-chip">проверить</span>' : '',
+                '</div>',
+                '<div class="qty-controls">',
+                  '<button class="qty-btn" type="button" data-action="minus" data-key="' + key + '">-</button>',
+                  '<input class="qty-input" inputmode="decimal" type="number" min="0.001" step="1" value="' + escapeHtml(formatQty(item.quantity)) + '" data-key="' + key + '">',
+                  '<button class="qty-btn" type="button" data-action="plus" data-key="' + key + '">+</button>',
+                  '<button class="qty-btn remove" type="button" data-action="remove" data-key="' + key + '">×</button>',
+                '</div>',
+              '</div>',
+            '</article>',
+          ].join('');
+        }).join('');
+      }
+
+      function renderSuggestions(products) {
+        if (!products || !products.length) {
+          els.suggestions.classList.add('hidden');
+          els.suggestions.innerHTML = '';
+          return;
+        }
+        els.suggestions.innerHTML = products.map(function (product, index) {
+          const meta = [
+            product.productId ? 'ИД ' + product.productId : '',
+            product.size ? 'Размер ' + product.size : '',
+            Number(product.discountPrice || product.price) ? 'Цена ' + formatMoney(product.discountPrice || product.price) : '',
+          ].filter(Boolean).join(' · ');
+          return '<button class="suggestion" type="button" data-index="' + index + '">' +
+            '<strong>' + escapeHtml(product.name || product.productId) + '</strong>' +
+            '<span class="product-meta">' + escapeHtml(meta) + '</span>' +
+          '</button>';
+        }).join('');
+        els.suggestions.querySelectorAll('button').forEach(function (button) {
+          button.addEventListener('click', function () {
+            const product = products[Number(button.dataset.index)];
+            if (!product) return;
+            putProductInDb(product).catch(function () {});
+            addToCart(product, 1);
+            renderSuggestions([]);
+            setLastProduct(product, 'Добавлено из списка');
+          });
+        });
+        els.suggestions.classList.remove('hidden');
+      }
+
+      function handleCartClick(event) {
+        const button = event.target.closest('button[data-action]');
+        if (!button) return;
+        const id = decodeURIComponent(button.dataset.key);
+        const action = button.dataset.action;
+        if (action === 'plus') changeQty(id, 1);
+        if (action === 'minus') changeQty(id, -1);
+        if (action === 'remove') removeItem(id);
+      }
+
+      function handleCartChange(event) {
+        if (!event.target.classList.contains('qty-input')) return;
+        const id = decodeURIComponent(event.target.dataset.key);
+        setQty(id, Number(event.target.value));
+      }
+
+      function changeQty(productId, delta) {
+        const cart = currentCart();
+        if (!cart[productId]) return;
+        setQty(productId, Number(cart[productId].quantity || 0) + delta);
+      }
+
+      function setQty(productId, quantity) {
+        const cart = currentCart();
+        if (!cart[productId]) return;
+        const next = Math.round(Number(quantity || 0) * 1000) / 1000;
+        if (!Number.isFinite(next) || next <= 0) {
+          delete cart[productId];
+        } else {
+          cart[productId].quantity = next;
+        }
+        saveCart();
+        renderCart();
+      }
+
+      function removeItem(productId) {
+        delete currentCart()[productId];
+        saveCart();
+        renderCart();
+      }
+
+      function addToCart(product, quantity) {
+        const id = String(product.productId || product.scannedCode || '').trim();
+        if (!id) {
+          showToast('Не найден ИД товара.', true);
+          return;
+        }
+        const cart = currentCart();
+        const existing = cart[id] || {
+          productId: id,
+          scannedCode: product.scannedCode || id,
+          name: product.name || ('Код ' + id),
+          artFact: product.artFact || '',
+          artChz: product.artChz || '',
+          gtin: product.gtin || '',
+          size: product.size || '',
+          price: product.price || 0,
+          discountPrice: product.discountPrice || 0,
+          unresolved: Boolean(product.unresolved),
+          quantity: 0,
+        };
+        existing.quantity = Math.round((Number(existing.quantity || 0) + Number(quantity || 1)) * 1000) / 1000;
+        existing.unresolved = existing.unresolved || Boolean(product.unresolved);
+        cart[id] = existing;
+        saveCart();
+        renderCart();
+      }
+
+      function saveCart() {
+        writeJson(KEYS.cart, state.cart);
+      }
+
+      async function handleCode(rawCode, manual) {
+        const code = cleanCode(rawCode);
+        if (!code) return;
+        renderSuggestions([]);
+        setLastText('Поиск: ' + code, manual ? 'Ручной ввод' : 'Сканирование');
+
+        const cached = await getProductFromDb(code);
+        if (cached) {
+          addToCart(cached, 1);
+          setLastProduct(cached, 'Добавлено из локальной базы');
+          return;
+        }
+
+        if (manual) {
+          const localSuggestions = await findProductSuggestionsInDb(code, 12);
+          if (localSuggestions.length) {
+            renderSuggestions(localSuggestions);
+            setLastText('Найдено несколько вариантов', 'Выберите товар из локальной базы');
+            return;
+          }
+        }
+
+        if (!state.apiUrl || !navigator.onLine) {
+          addUnresolved(code);
+          return;
+        }
+
+        try {
+          const data = await apiCall('findProduct', { query: code }, API_TIMEOUT_MS);
+          if (data.exact) {
+            await putProductInDb(data.exact);
+            addToCart(data.exact, 1);
+            setLastProduct(data.exact, 'Добавлено');
+            return;
+          }
+          if (data.suggestions && data.suggestions.length) {
+            renderSuggestions(data.suggestions);
+            setLastText('Найдено несколько вариантов', 'Выберите товар');
+            return;
+          }
+          addUnresolved(code);
+        } catch (error) {
+          const fallback = await getProductFromDb(code);
+          if (fallback) {
+            addToCart(fallback, 1);
+            setLastProduct(fallback, 'Добавлено из локальной базы');
+          } else {
+            addUnresolved(code);
+          }
+        }
+      }
+
+      function addUnresolved(code) {
+        const product = {
+          productId: code,
+          scannedCode: code,
+          name: 'Код ' + code,
+          unresolved: true,
+        };
+        addToCart(product, 1);
+        setLastText('Код добавлен локально', 'Перед отправкой приложение попробует найти товар в КТ.');
+      }
+
+      function setLastProduct(product, subtitle) {
+        const meta = [
+          product.productId ? 'ИД ' + product.productId : '',
+          product.size ? 'Размер ' + product.size : '',
+          Number(product.discountPrice || product.price) ? 'Цена ' + formatMoney(product.discountPrice || product.price) : '',
+        ].filter(Boolean).join(' · ');
+        els.lastProduct.innerHTML =
+          '<div class="product-title">' + escapeHtml(product.name || product.productId) + '</div>' +
+          '<div class="product-meta">' + escapeHtml(subtitle || meta || '') + (subtitle && meta ? ' · ' + escapeHtml(meta) : '') + '</div>';
+      }
+
+      function setLastText(title, meta) {
+        els.lastProduct.innerHTML =
+          '<div class="product-title">' + escapeHtml(title) + '</div>' +
+          '<div class="product-meta">' + escapeHtml(meta || '') + '</div>';
+      }
+
+      async function startCamera() {
+        if (!window.isSecureContext) {
+          setCameraStatus('Камера работает только по HTTPS.', true);
+          showToast('Откройте ссылку GitHub Pages по HTTPS.', true);
+          return;
+        }
+        if (!window.Html5Qrcode) {
+          setCameraStatus('Библиотека html5-qrcode не загрузилась.', true);
+          return;
+        }
+
+        await stopCamera();
+        setCameraStatus('Запускаю камеру...');
+
+        try {
+          const formats = [
+            Html5QrcodeSupportedFormats.EAN_13,
+            Html5QrcodeSupportedFormats.EAN_8,
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39,
+            Html5QrcodeSupportedFormats.ITF,
+            Html5QrcodeSupportedFormats.UPC_A,
+            Html5QrcodeSupportedFormats.UPC_E,
+            Html5QrcodeSupportedFormats.QR_CODE,
+            Html5QrcodeSupportedFormats.DATA_MATRIX,
+          ];
+          state.html5QrCode = new Html5Qrcode('reader', {
+            formatsToSupport: formats,
+          }, false);
+          await state.html5QrCode.start(
+            { facingMode: 'environment' },
+            {
+              fps: 10,
+              qrbox: function (width, height) {
+                return {
+                  width: Math.max(220, Math.floor(width * 0.86)),
+                  height: Math.max(110, Math.min(170, Math.floor(height * 0.38))),
+                };
+              },
+              aspectRatio: 4 / 3,
+              disableFlip: true,
+            },
+            handleDetectedCode,
+            function () {}
+          );
+          state.scanning = true;
+          els.scannerBox.classList.add('active');
+          setCameraStatus('Камера включена');
+          updateTorchAvailability();
+        } catch (error) {
+          stopCamera();
+          setCameraStatus(cameraErrorMessage(error), true);
+          showToast(cameraErrorMessage(error), true);
+        }
+      }
+
+      function handleDetectedCode(rawCode) {
+        const code = cleanCode(rawCode);
+        if (!code) return;
+        const now = Date.now();
+        if (state.lastScan.code === code && now - state.lastScan.at < SCAN_COOLDOWN_MS) return;
+        state.lastScan = { code: code, at: now };
+        feedback();
+        handleCode(code, false);
+      }
+
+      async function stopCamera() {
+        if (state.cameraStopping) return;
+        state.cameraStopping = true;
+        if (state.html5QrCode) {
+          try {
+            if (state.scanning) await state.html5QrCode.stop();
+          } catch (error) {
+            // The browser may already have stopped the stream.
+          }
+          try {
+            state.html5QrCode.clear();
+          } catch (error) {
+            // Clearing is best-effort after a failed camera start.
+          }
+        }
+        state.html5QrCode = null;
+        state.scanning = false;
+        state.torchOn = false;
+        els.scannerBox.classList.remove('active');
+        els.torchBtn.disabled = true;
+        els.torchBtn.textContent = 'Свет';
+        setCameraStatus('Камера выключена');
+        state.cameraStopping = false;
+      }
+
+      function updateTorchAvailability() {
+        let capabilities = {};
+        try {
+          capabilities = state.html5QrCode ? state.html5QrCode.getRunningTrackCapabilities() : {};
+        } catch (error) {
+          capabilities = {};
+        }
+        els.torchBtn.disabled = !capabilities.torch;
+      }
+
+      async function toggleTorch() {
+        if (!state.html5QrCode || !state.scanning) return;
+        state.torchOn = !state.torchOn;
+        try {
+          await state.html5QrCode.applyVideoConstraints({ advanced: [{ torch: state.torchOn }] });
+          els.torchBtn.textContent = state.torchOn ? 'Свет вкл' : 'Свет';
+        } catch (error) {
+          state.torchOn = false;
+          els.torchBtn.disabled = true;
+        }
+      }
+
+      function cameraErrorMessage(error) {
+        const name = error && error.name ? error.name : '';
+        const message = error && error.message ? error.message : String(error || '');
+        if (name === 'NotAllowedError' || /permission|denied|not allowed/i.test(message)) {
+          return 'Доступ к камере запрещен. Разрешите камеру в настройках браузера.';
+        }
+        if (name === 'NotFoundError') return 'Камера не найдена.';
+        if (/permissions policy/i.test(message)) {
+          return 'Страница открыта внутри iframe. Откройте GitHub Pages напрямую.';
+        }
+        return message || 'Не удалось открыть камеру.';
+      }
+
+      function setCameraStatus(message, isError) {
+        els.cameraStatus.textContent = message || '';
+        els.cameraStatus.style.color = isError ? '#ffb4ab' : '';
+      }
+
+      async function sendCurrentCart() {
+        if (state.sending) return;
+        const items = Object.values(currentCart());
+        if (!items.length) {
+          showToast('Список пуст.', true);
+          return;
+        }
+        if (!state.employee) {
+          showToast('Войдите под сотрудником.', true);
+          return;
+        }
+
+        const operation = {
+          id: makeRequestId(),
+          mode: state.mode,
+          employeeId: state.employee.employeeId,
+          items: cloneItems(items),
+          createdAt: new Date().toISOString(),
+        };
+
+        if (!navigator.onLine) {
+          enqueueOperation(operation);
+          state.cart[state.mode] = {};
+          saveCart();
+          renderCart();
+          showToast('Нет сети. Список сохранен в очередь.');
+          return;
+        }
+
+        state.sending = true;
+        els.sendBtn.disabled = true;
+        els.sendBtn.textContent = 'Запись...';
+
+        try {
+          operation.items = await resolveItemsForSend(operation.items);
+          await sendOperation(operation);
+          state.cart[state.mode] = {};
+          saveCart();
+          renderCart();
+          showToast(MODES[operation.mode].sent + '.');
+        } catch (error) {
+          if (isNetworkError(error)) {
+            enqueueOperation(operation);
+            state.cart[state.mode] = {};
+            saveCart();
+            renderCart();
+            showToast('Нет связи. Список сохранен в очередь.');
+          } else {
+            showToast(error.message, true);
+          }
+        } finally {
+          state.sending = false;
+          els.sendBtn.disabled = false;
+          els.sendBtn.textContent = 'Записать';
+          renderNetwork();
+        }
+      }
+
+      async function resolveItemsForSend(items) {
+        const resolved = [];
+        for (const item of items) {
+          let next = Object.assign({}, item);
+          if (next.unresolved) {
+            const code = next.scannedCode || next.productId;
+            const cached = await getProductFromDb(code);
+            if (cached) {
+              next = mergeItemWithProduct(next, cached);
+            } else if (navigator.onLine && state.apiUrl) {
+              const data = await apiCall('findProduct', { query: code }, API_TIMEOUT_MS);
+              if (data.exact) {
+                await putProductInDb(data.exact);
+                next = mergeItemWithProduct(next, data.exact);
+              }
+            }
+          }
+          resolved.push(next);
+        }
+        return mergeSameProducts(resolved);
+      }
+
+      function mergeItemWithProduct(item, product) {
+        return {
+          productId: product.productId,
+          scannedCode: item.scannedCode || product.productId,
+          name: product.name || item.name,
+          artFact: product.artFact || '',
+          artChz: product.artChz || '',
+          gtin: product.gtin || '',
+          size: product.size || '',
+          price: product.price || 0,
+          discountPrice: product.discountPrice || 0,
+          unresolved: false,
+          quantity: item.quantity,
+        };
+      }
+
+      function mergeSameProducts(items) {
+        const map = {};
+        items.forEach(function (item) {
+          const id = item.productId;
+          if (!map[id]) {
+            map[id] = Object.assign({}, item);
+            return;
+          }
+          map[id].quantity = Math.round((Number(map[id].quantity || 0) + Number(item.quantity || 0)) * 1000) / 1000;
+          map[id].unresolved = map[id].unresolved || item.unresolved;
+        });
+        return Object.values(map);
+      }
+
+      async function sendOperation(operation) {
+        if (!state.apiUrl) throw new Error('Не задан адрес API.');
+        const mode = MODES[operation.mode] ? operation.mode : 'receiving';
+        const action = MODES[mode].action;
+        const items = operation.items.map(function (item) {
+          return {
+            productId: item.productId,
+            quantity: item.quantity,
+          };
+        });
+        const chunks = chunk(items, CHUNK_SIZE);
+        for (let index = 0; index < chunks.length; index += 1) {
+          const payload = {
+            requestId: operation.id + '-' + (index + 1),
+            employeeId: operation.employeeId,
+            items: chunks[index],
+          };
+          await apiCall(action, { payload: JSON.stringify(payload) }, API_TIMEOUT_MS + 8000);
+        }
+      }
+
+      function enqueueOperation(operation) {
+        const exists = state.queue.some(function (item) {
+          return item.id === operation.id;
+        });
+        if (!exists) state.queue.push(operation);
+        saveQueue();
+        renderNetwork();
+      }
+
+      async function flushQueue() {
+        if (state.flushing || !state.queue.length || !state.apiUrl || !navigator.onLine) {
+          renderNetwork();
+          return;
+        }
+        state.flushing = true;
+        els.flushBtn.disabled = true;
+        els.flushBtn.textContent = 'Запись...';
+
+        const remaining = [];
+        for (let index = 0; index < state.queue.length; index += 1) {
+          const operation = state.queue[index];
+          try {
+            operation.items = await resolveItemsForSend(operation.items);
+            await sendOperation(operation);
+          } catch (error) {
+            operation.lastError = error.message;
+            remaining.push(operation);
+            if (isNetworkError(error)) {
+              remaining.push.apply(remaining, state.queue.slice(index + 1));
+              break;
+            }
+          }
+        }
+
+        const sentCount = state.queue.length - remaining.length;
+        state.queue = remaining;
+        saveQueue();
+        state.flushing = false;
+        els.flushBtn.disabled = false;
+        els.flushBtn.textContent = 'Очередь';
+        renderNetwork();
+        if (sentCount > 0) showToast('Очередь записана: ' + sentCount + '.');
+        if (remaining.length && remaining[0].lastError && !isNetworkText(remaining[0].lastError)) {
+          showToast(remaining[0].lastError, true);
+        }
+      }
+
+      function apiCall(action, params, timeoutMs) {
+        return new Promise(function (resolve, reject) {
+          if (!state.apiUrl) {
+            reject(new Error('Не задан адрес API.'));
+            return;
+          }
+          if (!navigator.onLine) {
+            reject(makeNetworkError('Нет сети.'));
+            return;
+          }
+
+          let url;
+          try {
+            url = new URL(state.apiUrl);
+          } catch (error) {
+            reject(new Error('Некорректный адрес API.'));
+            return;
+          }
+
+          const callbackName = '__storePhoneApi_' + Date.now() + '_' + (++jsonpSeq);
+          url.searchParams.set('action', action);
+          url.searchParams.set('callback', callbackName);
+          url.searchParams.set('_', String(Date.now()));
+          Object.keys(params || {}).forEach(function (key) {
+            url.searchParams.set(key, params[key]);
+          });
+
+          if (url.toString().length > 14000) {
+            reject(new Error('Слишком много строк для одного запроса. Отправьте меньшую партию.'));
+            return;
+          }
+
+          const script = document.createElement('script');
+          let done = false;
+          const timer = setTimeout(function () {
+            cleanup();
+            reject(makeNetworkError('Нет ответа от сервера.'));
+          }, timeoutMs || API_TIMEOUT_MS);
+
+          window[callbackName] = function (response) {
+            cleanup();
+            if (response && response.ok) {
+              resolve(response.result);
+            } else {
+              reject(new Error(response && response.error ? response.error : 'Ошибка API.'));
+            }
+          };
+
+          script.onerror = function () {
+            cleanup();
+            reject(makeNetworkError('Не удалось связаться с сервером.'));
+          };
+
+          script.src = url.toString();
+          document.head.appendChild(script);
+
+          function cleanup() {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            try {
+              delete window[callbackName];
+            } catch (error) {
+              window[callbackName] = undefined;
+            }
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+        });
+      }
+
+      async function initializeProductDb() {
+        try {
+          state.productDb = await openProductDb();
+          state.productCount = await countProductsInDb();
+          renderNetwork();
+        } catch (error) {
+          showToast('Локальная база КТ недоступна: ' + error.message, true);
+        }
+      }
+
+      function openProductDb() {
+        if (state.productDb) return Promise.resolve(state.productDb);
+        return new Promise(function (resolve, reject) {
+          if (!window.indexedDB) {
+            reject(new Error('браузер не поддерживает IndexedDB'));
+            return;
+          }
+          const request = indexedDB.open(DB_NAME, DB_VERSION);
+          request.onupgradeneeded = function () {
+            const db = request.result;
+            let products;
+            if (!db.objectStoreNames.contains(PRODUCT_STORE)) {
+              products = db.createObjectStore(PRODUCT_STORE, { keyPath: 'productId' });
+            } else {
+              products = request.transaction.objectStore(PRODUCT_STORE);
+            }
+            if (!products.indexNames.contains('lookupKeys')) {
+              products.createIndex('lookupKeys', 'lookupKeys', { unique: false, multiEntry: true });
+            }
+            if (!db.objectStoreNames.contains(META_STORE)) {
+              db.createObjectStore(META_STORE, { keyPath: 'key' });
+            }
+          };
+          request.onsuccess = function () {
+            state.productDb = request.result;
+            state.productDb.onversionchange = function () {
+              state.productDb.close();
+              state.productDb = null;
+            };
+            resolve(state.productDb);
+          };
+          request.onerror = function () {
+            reject(request.error || new Error('не удалось открыть IndexedDB'));
+          };
+        });
+      }
+
+      function prepareProductForDb(product, syncToken) {
+        const compact = {
+          productId: String(product.productId || '').trim(),
+          artFact: product.artFact || '',
+          name: product.name || '',
+          artChz: product.artChz || '',
+          gtin: product.gtin || '',
+          size: product.size || '',
+          purchasePrice: Number(product.purchasePrice || 0),
+          price: Number(product.price || 0),
+          discountRate: Number(product.discountRate || 0),
+          discountText: product.discountText || '',
+          discountPrice: Number(product.discountPrice || 0),
+          syncToken: syncToken || state.productSyncToken || 'single',
+        };
+        compact.lookupKeys = uniqueStrings([
+          compact.productId,
+          compact.artFact,
+          compact.artChz,
+          compact.gtin,
+          compact.name,
+        ].map(normalizeKey).filter(Boolean));
+        return compact;
+      }
+
+      async function putProductInDb(product, syncToken) {
+        if (!product || !product.productId) return;
+        const db = await openProductDb();
+        return idbTransactionPromise(db, PRODUCT_STORE, 'readwrite', function (store) {
+          store.put(prepareProductForDb(product, syncToken));
+        });
+      }
+
+      async function putProductsBatchInDb(products, syncToken) {
+        const db = await openProductDb();
+        return idbTransactionPromise(db, PRODUCT_STORE, 'readwrite', function (store) {
+          products.forEach(function (product) {
+            if (product && product.productId) store.put(prepareProductForDb(product, syncToken));
+          });
+        });
+      }
+
+      async function getProductFromDb(code) {
+        const key = normalizeKey(code);
+        if (!key) return null;
+        try {
+          const db = await openProductDb();
+          return await idbRequestPromise(
+            db.transaction(PRODUCT_STORE, 'readonly').objectStore(PRODUCT_STORE).index('lookupKeys').get(key)
+          );
+        } catch (error) {
+          return null;
+        }
+      }
+
+      async function findProductSuggestionsInDb(query, limit) {
+        const key = normalizeKey(query);
+        if (!key) return [];
+        try {
+          const db = await openProductDb();
+          const transaction = db.transaction(PRODUCT_STORE, 'readonly');
+          const index = transaction.objectStore(PRODUCT_STORE).index('lookupKeys');
+          const range = IDBKeyRange.bound(key, key + '\uffff');
+          return await new Promise(function (resolve, reject) {
+            const result = [];
+            const seen = {};
+            const request = index.openCursor(range);
+            request.onsuccess = function () {
+              const cursor = request.result;
+              if (!cursor || result.length >= limit) {
+                resolve(result);
+                return;
+              }
+              const product = cursor.value;
+              if (!seen[product.productId]) {
+                seen[product.productId] = true;
+                result.push(product);
+              }
+              cursor.continue();
+            };
+            request.onerror = function () {
+              reject(request.error);
+            };
+          });
+        } catch (error) {
+          return [];
+        }
+      }
+
+      async function countProductsInDb() {
+        const db = await openProductDb();
+        const request = db.transaction(PRODUCT_STORE, 'readonly').objectStore(PRODUCT_STORE).count();
+        return Number(await idbRequestPromise(request)) || 0;
+      }
+
+      async function purgeStaleProducts(syncToken) {
+        const db = await openProductDb();
+        return new Promise(function (resolve, reject) {
+          const transaction = db.transaction(PRODUCT_STORE, 'readwrite');
+          const request = transaction.objectStore(PRODUCT_STORE).openCursor();
+          request.onsuccess = function () {
+            const cursor = request.result;
+            if (!cursor) return;
+            if (cursor.value.syncToken !== syncToken) cursor.delete();
+            cursor.continue();
+          };
+          request.onerror = function () {
+            reject(request.error);
+          };
+          transaction.oncomplete = function () {
+            resolve();
+          };
+          transaction.onerror = function () {
+            reject(transaction.error);
+          };
+          transaction.onabort = function () {
+            reject(transaction.error || new Error('очистка IndexedDB прервана'));
+          };
+        });
+      }
+
+      async function saveProductSyncMeta(value) {
+        const db = await openProductDb();
+        return idbTransactionPromise(db, META_STORE, 'readwrite', function (store) {
+          store.put(Object.assign({ key: 'productsSync' }, value));
+        });
+      }
+
+      async function syncProducts() {
+        if (state.syncingProducts || !state.apiUrl || !state.employee || !navigator.onLine) return;
+        state.syncingProducts = true;
+        state.syncLoaded = 0;
+        state.syncTotal = 0;
+        renderNetwork();
+        const syncToken = makeRequestId();
+        state.productSyncToken = syncToken;
+        let offset = 0;
+
+        try {
+          while (true) {
+            const data = await apiCallWithRetry('getProductsBatch', {
+              offset: String(offset),
+              limit: String(PRODUCT_BATCH_SIZE),
+            }, API_TIMEOUT_MS + 21000, 3);
+            const products = Array.isArray(data.products) ? data.products : [];
+            await putProductsBatchInDb(products, syncToken);
+            state.syncTotal = Number(data.total || 0);
+            state.syncLoaded = Math.min(state.syncTotal, offset + products.length);
+            renderNetwork();
+            await saveProductSyncMeta({
+              status: 'loading',
+              token: syncToken,
+              loaded: state.syncLoaded,
+              total: state.syncTotal,
+              updatedAt: new Date().toISOString(),
+            });
+            if (data.nextOffset === null || data.nextOffset === undefined) break;
+            offset = Number(data.nextOffset);
+          }
+
+          await purgeStaleProducts(syncToken);
+          state.productCount = await countProductsInDb();
+          await saveProductSyncMeta({
+            status: 'complete',
+            token: syncToken,
+            loaded: state.productCount,
+            total: state.productCount,
+            updatedAt: new Date().toISOString(),
+          });
+          showToast('КТ сохранена локально: ' + state.productCount + '.');
+        } catch (error) {
+          if (!isNetworkError(error)) {
+            showToast('Не удалось обновить КТ: ' + error.message, true);
+          }
+        } finally {
+          state.syncingProducts = false;
+          renderNetwork();
+        }
+      }
+
+      function idbRequestPromise(request) {
+        return new Promise(function (resolve, reject) {
+          request.onsuccess = function () {
+            resolve(request.result || null);
+          };
+          request.onerror = function () {
+            reject(request.error || new Error('ошибка IndexedDB'));
+          };
+        });
+      }
+
+      async function apiCallWithRetry(action, params, timeoutMs, attempts) {
+        let lastError;
+        for (let attempt = 1; attempt <= attempts; attempt += 1) {
+          try {
+            return await apiCall(action, params, timeoutMs);
+          } catch (error) {
+            lastError = error;
+            if (!navigator.onLine || attempt === attempts || !isNetworkError(error)) throw error;
+            await delay(700 * attempt);
+          }
+        }
+        throw lastError;
+      }
+
+      function idbTransactionPromise(db, storeName, mode, callback) {
+        return new Promise(function (resolve, reject) {
+          const transaction = db.transaction(storeName, mode);
+          callback(transaction.objectStore(storeName));
+          transaction.oncomplete = function () {
+            resolve();
+          };
+          transaction.onerror = function () {
+            reject(transaction.error || new Error('ошибка IndexedDB'));
+          };
+          transaction.onabort = function () {
+            reject(transaction.error || new Error('операция IndexedDB прервана'));
+          };
+        });
+      }
+
+      function uniqueStrings(values) {
+        const seen = {};
+        return values.filter(function (value) {
+          if (!value || seen[value]) return false;
+          seen[value] = true;
+          return true;
+        });
+      }
+
+      function delay(milliseconds) {
+        return new Promise(function (resolve) {
+          setTimeout(resolve, milliseconds);
+        });
+      }
+
+      function feedback() {
+        if (navigator.vibrate) navigator.vibrate([70]);
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContext) return;
+          if (!state.audioCtx) state.audioCtx = new AudioContext();
+          const ctx = state.audioCtx;
+          if (ctx.state === 'suspended') ctx.resume();
+          const oscillator = ctx.createOscillator();
+          const gain = ctx.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+          gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.16, ctx.currentTime + 0.015);
+          gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.13);
+          oscillator.connect(gain);
+          gain.connect(ctx.destination);
+          oscillator.start();
+          oscillator.stop(ctx.currentTime + 0.14);
+        } catch (error) {
+          // Sound feedback is best-effort; vibration still confirms the scan.
+        }
+      }
+
+      function registerServiceWorker() {
+        if (!('serviceWorker' in navigator) || !window.isSecureContext) return;
+        navigator.serviceWorker.register('sw.js').catch(function () {});
+      }
+
+      function setStatus(element, message, isError) {
+        element.textContent = message || '';
+        element.classList.toggle('error', Boolean(isError));
+      }
+
+      function showToast(message, isError) {
+        clearTimeout(toastTimer);
+        els.toast.textContent = message;
+        els.toast.classList.toggle('error', Boolean(isError));
+        els.toast.classList.remove('hidden');
+        toastTimer = setTimeout(function () {
+          els.toast.classList.add('hidden');
+        }, isError ? 5200 : 3200);
+      }
+
+      function readJson(key, fallback) {
+        try {
+          const value = localStorage.getItem(key);
+          return value ? JSON.parse(value) : fallback;
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function writeJson(key, value) {
+        localStorage.setItem(key, JSON.stringify(value));
+      }
+
+      function saveQueue() {
+        writeJson(KEYS.queue, state.queue);
+      }
+
+      function cleanCode(value) {
+        return String(value || '').trim().replace(/\s+/g, '');
+      }
+
+      function normalizeKey(value) {
+        return String(value || '').trim().toLowerCase();
+      }
+
+      function cloneItems(items) {
+        return items.map(function (item) {
+          return Object.assign({}, item);
+        });
+      }
+
+      function chunk(items, size) {
+        const result = [];
+        for (let index = 0; index < items.length; index += size) {
+          result.push(items.slice(index, index + size));
+        }
+        return result;
+      }
+
+      function makeRequestId() {
+        return 'M' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).slice(2, 8).toUpperCase();
+      }
+
+      function makeNetworkError(message) {
+        const error = new Error(message);
+        error.isNetwork = true;
+        return error;
+      }
+
+      function isNetworkError(error) {
+        return Boolean(error && error.isNetwork) || !navigator.onLine || isNetworkText(error && error.message);
+      }
+
+      function isNetworkText(text) {
+        return /ответ|связаться|network|timeout|load failed|сервер/i.test(String(text || ''));
+      }
+
+      function formatMoney(value) {
+        return new Intl.NumberFormat('ru-RU', {
+          maximumFractionDigits: 2,
+        }).format(Number(value || 0));
+      }
+
+      function formatQty(value) {
+        const number = Number(value || 0);
+        return Number.isInteger(number) ? String(number) : String(Math.round(number * 1000) / 1000);
+      }
+
+      function escapeHtml(value) {
+        return String(value || '')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#039;');
+      }
+
+      function focusSoon(element) {
+        setTimeout(function () {
+          if (!element || !element.focus) return;
+          try {
+            element.focus({ preventScroll: true });
+          } catch (error) {
+            element.focus();
+          }
+        }, 80);
+      }
+
+      function isEmbedded() {
+        try {
+          return window.self !== window.top;
+        } catch (error) {
+          return true;
+        }
+      }
+    }());
+  </script>
+</body>
+</html>
