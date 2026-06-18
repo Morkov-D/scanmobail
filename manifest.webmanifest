@@ -1,9 +1,0 @@
-{
-  "name": "Сканер магазина",
-  "short_name": "Сканер",
-  "start_url": ".",
-  "scope": ".",
-  "display": "standalone",
-  "background_color": "#f6f7f4",
-  "theme_color": "#155eef"
-}
